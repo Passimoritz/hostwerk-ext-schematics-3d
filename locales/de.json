@@ -1,0 +1,23 @@
+{
+  "Schematics in 3D": "Bauwerke in 3D",
+  "Look at Minecraft builds before you place them – from WorldEdit, Litematica and MCEdit.": "Minecraft-Bauwerke ansehen, bevor du sie setzt – aus WorldEdit, Litematica und MCEdit.",
+  "Where do the files come from?": "Woher kommen die Dateien?",
+  "Hostwerk looks through the folders of your Minecraft servers (for example plugins/WorldEdit/schematics or schematics/). Any build file in the file browser opens in 3D as well.": "Hostwerk durchsucht die Ordner deiner Minecraft-Server (z. B. plugins/WorldEdit/schematics oder schematics/). Jede Bauwerk-Datei im Dateibrowser öffnet sich ebenfalls in 3D.",
+  "Open files": "Dateien öffnen",
+  "No builds found": "Keine Bauwerke gefunden",
+  "Put .schem, .schematic or .litematic files into a Minecraft server folder – or open one in the file browser.": "Lege .schem-, .schematic- oder .litematic-Dateien in einen Minecraft-Server-Ordner – oder öffne eine im Dateibrowser.",
+  "Search builds …": "Bauwerke durchsuchen …",
+  "Search builds": "Bauwerke durchsuchen",
+  "Pick a build": "Bauwerk wählen",
+  "Choose a file on the left – it opens here in 3D.": "Links eine Datei wählen – sie öffnet sich hier in 3D.",
+  "3D view of the build": "3D-Ansicht des Bauwerks",
+  "{x} × {y} × {z} blocks · {total} blocks, {shown} visible · {kinds} block types": "{x} × {y} × {z} Blöcke · {total} Blöcke, {shown} sichtbar · {kinds} Blockarten",
+  "shortened": "gekürzt",
+  "Reading the build …": "Bauwerk wird gelesen …",
+  "Drag to rotate, scroll to zoom": "Ziehen dreht, Mausrad zoomt",
+  "Unknown schematic format.": "Unbekanntes Schematic-Format.",
+  "The file is too big for the preview (over 30 MB).": "Die Datei ist für die Vorschau zu groß (über 30 MB).",
+  "3D": "3D",
+  "Not an NBT file (no compound at the start).": "Keine NBT-Datei (kein Compound am Anfang).",
+  "$patterns": [["Unknown NBT type {}", "Unbekannter NBT-Typ {}"]]
+}
