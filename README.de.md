@@ -4,17 +4,21 @@
 
 Minecraft-Bauwerke in 3D ansehen, bevor du sie setzt: .schem (WorldEdit/Sponge), .litematic (Litematica) und .schematic (MCEdit).
 
-[English](README.md) · Offizielle [Hostwerk](https://github.com/Passimoritz/hostwerk-public)-Erweiterung (SDK 2.7, native Erweiterung)
+[English](README.md) · Offizielle [Hostwerk](https://github.com/Passimoritz/hostwerk-public)-Erweiterung (SDK 2.7, native Erweiterung; Datei-Browser-Anschlüsse SDK 3.2)
 
 ![Bildschirmfoto](docs/screenshot.de.png)
 
 ## Was sie kann
 
-- 3D-Ansicht – drehen, zoomen, hineinschauen
-- Eigene Seite mit allen Bauwerken deiner Server und ein Reiter „Bauwerke“ im Minecraft-Bereich (Server wählbar)
+- **Im Datei-Browser zu Hause:** Bauwerk-Dateien öffnen sich in der Vorschau direkt in 3D, Rechtsklick „In 3D ansehen“ (SDK 3.2: `files.actions`)
+- 3D-Ansicht – drehen, zoomen, hineinschauen; auch per Tastatur (Pfeile drehen, + / − zoomt, Bild auf/ab wechselt die Ebene, 0 setzt zurück)
+- Optional eine eigene Seite mit allen Bauwerken deiner Server (in der Seitenleiste unter Dateien, ausblendbar) – der frühere Reiter im Minecraft-Bereich entfällt
 - Formate: .schem (WorldEdit/Sponge), .litematic, .schematic (MCEdit) und Vanilla-.nbt-Strukturen
-- Ebenen-Schieber – Schicht für Schicht von unten
-- Materialliste mit Anzahl und 64er-Stapeln (auch verdeckte Blöcke), als Text kopieren
+- Ebenen-Schieber – Schicht für Schicht von unten, oder **nur eine Ebene** als Schnitt
+- Materialliste mit Anzahl und 64er-Stapeln (auch verdeckte Blöcke), als Text kopieren oder **als CSV** speichern
+- **Vergleich zweier Stände:** ein anderes Bauwerk im selben Ordner wählen – welche Blöcke mehr oder weniger geworden sind
+- Große Bauwerke: eine Zeichnung je Durchsichtigkeit (Instancing), verdeckte Blöcke werden gar nicht erst gezeichnet
+- Ins Spiel setzen kann die Erweiterung bewusst nicht – das bleibt bei WorldEdit/Litematica im Spiel, wo du siehst, was passiert
 - Ansicht als PNG-Bild speichern
 - Direkt in der Dateivorschau von Hostwerks Dateibrowser
 - Läuft auf diesem PC – nichts wird hochgeladen

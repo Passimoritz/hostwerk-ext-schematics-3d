@@ -10,11 +10,15 @@ Look at Minecraft builds in 3D before you place them: .schem (WorldEdit/Sponge),
 
 ## What it does
 
-- 3D view – turn, zoom, look inside
-- Own page with every build of your servers, and a tab “Builds” in the Minecraft area (choose the server)
+- **At home in the file browser:** build files open in 3D right in the preview, right-click “View in 3D” (SDK 3.2: `files.actions`)
+- 3D view – turn, zoom, look inside; also with the keyboard (arrows rotate, + / − zoom, Page up/down change the layer, 0 resets)
+- Optionally an own page with every build of your servers (sidebar under Files, can be hidden) – the former tab in the Minecraft area is gone
 - Formats: .schem (WorldEdit/Sponge), .litematic, .schematic (MCEdit) and vanilla .nbt structures
-- Layer slider – layer by layer from the bottom
-- Material list with counts and stacks of 64 (hidden blocks included), copy as text
+- Layer slider – layer by layer from the bottom, or **just one layer** as a slice
+- Material list with counts and stacks of 64 (hidden blocks included), copy as text or save **as CSV**
+- **Compare two versions:** pick another build in the same folder – which blocks became more or fewer
+- Big builds: one draw call per opacity (instancing), hidden blocks are never drawn
+- Placing builds into a world is deliberately not part of it – that stays with WorldEdit/Litematica in the game, where you see what happens
 - Save the view as a PNG picture
 - Right in the file preview of Hostwerk’s file browser
 - Runs on this PC – nothing is uploaded

@@ -46,5 +46,20 @@
       "Unknown NBT type {}",
       "Unbekannter NBT-Typ {}"
     ]
-  ]
+  ],
+  "View in 3D": "In 3D ansehen",
+  "Only this layer": "Nur diese Ebene",
+  "Save as CSV": "Als CSV speichern",
+  "Shulker boxes": "Shulkerkisten",
+  "Compare …": "Vergleichen …",
+  "Compare with": "Vergleichen mit",
+  "Compare with …": "Vergleichen mit …",
+  "No other build in this folder": "Kein anderes Bauwerk in diesem Ordner",
+  "Compared with {name}: {n} block types changed": "Verglichen mit {name}: {n} Blockarten geändert",
+  "Same material – both builds use the same blocks in the same amounts.": "Gleiches Material – beide Bauwerke nutzen dieselben Blöcke in denselben Mengen.",
+  "This build": "Dieses Bauwerk",
+  "Other": "Anderes",
+  "Difference": "Unterschied",
+  "3D view of the build – arrow keys rotate, plus and minus zoom, Page up and Page down change the layer, 0 resets the view": "3D-Ansicht des Bauwerks – Pfeiltasten drehen, Plus und Minus zoomen, Bild auf/ab wechselt die Ebene, 0 setzt die Ansicht zurück",
+  "or click and use the arrow keys": "oder anklicken und Pfeiltasten nutzen"
 }

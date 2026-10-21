@@ -18,3 +18,19 @@ test('layer slider: blocks at or below each level', async () => {
   assert.deepStrictEqual(countsUpTo([0, 0, 1, 3], 4), [2, 3, 3, 4]);
   assert.deepStrictEqual(countsUpTo([], 2), [0, 0]);
 });
+
+test('CSV: Kopfzeile, Semikolon, Anführungszeichen nur wo nötig, BOM für Tabellenprogramme', async () => {
+  const { asCsv, materials } = await import('../ui/src/materials.mjs');
+  const csv = asCsv(materials(['minecraft:stone', 'minecraft:oak;odd'], [130, 3]), { header: ['Block', 'Anzahl', 'Stapel', 'Shulkerkisten'] });
+  const lines = csv.replace(/^\uFEFF/, '').trim().split('\r\n');
+  assert.deepStrictEqual(lines, ['Block;Anzahl;Stapel;Shulkerkisten', 'Stone;130;2 + 2;0.1', '"Oak;odd";3;;0']);
+  assert.ok(csv.startsWith('\uFEFF'));
+});
+
+test('Vergleich: nur geänderte Blöcke, größte Änderung zuerst', async () => {
+  const { diffMaterials, materials } = await import('../ui/src/materials.mjs');
+  const a = materials(['minecraft:stone', 'minecraft:dirt', 'minecraft:glass'], [100, 5, 7]);
+  const b = materials(['minecraft:stone', 'minecraft:dirt', 'minecraft:sand'], [40, 5, 2]);
+  assert.deepStrictEqual(diffMaterials(a, b).map((x) => [x.label, x.a, x.b, x.delta]), [['Stone', 100, 40, 60], ['Glass', 7, 0, 7], ['Sand', 0, 2, -2]]);
+  assert.deepStrictEqual(diffMaterials(a, a), []);
+});

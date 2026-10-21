@@ -1,3 +1,9 @@
+## 1.2.0
+
+- Lives in the file browser now: the 3D view is the preview of build files, and the right-click menu offers “View in 3D” (Hostwerk with SDK 3.2). The tab in the Minecraft area is gone; the own page stays optional (sidebar under Files). / Zuhause im Datei-Browser: Vorschau in 3D und Rechtsklick „In 3D ansehen“; der Reiter im Minecraft-Bereich entfällt, die eigene Seite bleibt optional (Seitenleiste unter Dateien).
+- Layer slice “Only this layer”, material list as CSV, comparison with another build in the same folder (which blocks changed). / Ebenen-Schnitt, Materialliste als CSV, Vergleich mit einem anderen Bauwerk im selben Ordner.
+- Keyboard: arrows rotate, + / − zoom, Page up/down change the layer, 0 resets the view. / Tastatur: Pfeile drehen, + / − zoomt, Bild auf/ab wechselt die Ebene, 0 setzt zurück.
+
 ## 1.1.0
 
 - Colour rules in the right order: specific blocks (redstone, end stone, glowstone …) before the broad families – "stone" no longer catches "redstone_block"; whole-word matching; the colours are documented (average vanilla texture colour) and tested. / Farbregeln in richtiger Reihenfolge, begründet und getestet.

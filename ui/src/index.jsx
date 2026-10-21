@@ -6,9 +6,9 @@ import Viewer from './Viewer';
 import './style.css';
 
 /*
- * Schematics in 3D: a page with every build file of your Minecraft servers and a 3D viewer, a tab "Builds" in Hostwerk's
- * Minecraft area (slot "minecraft.tabs", with a choice of server), plus the 3D view in Hostwerk's file preview
- * (slot "files.preview") for .schem, .schematic, .litematic and vanilla .nbt structures.
+ * Schematics in 3D – lives in Hostwerk's file browser (SDK 3.2): the 3D view is the preview for .schem, .schematic,
+ * .litematic and vanilla .nbt (slot "files.preview"), the right-click menu offers "View in 3D" (slot "files.actions").
+ * The own page with every build of all Minecraft servers is optional (sidebar under Files, can be hidden).
  */
 function Builds({ compact = false }) {
   const d = useApi('/schematics', [], { live: false });
@@ -68,12 +68,14 @@ function SchematicsPage() {
   );
 }
 
+const BUILD = /\.(schem|schematic|litematic|nbt)$/i;
+
 export default {
   pages: { main: SchematicsPage },
   slots: {
     // Hostwerk's file preview offers "3D" for these files as soon as this extension is installed
-    'files.preview': [{ id: 'schematic-3d', title: '3D', match: /\.(schem|schematic|litematic|nbt)$/i, Component: Viewer }],
-    // Reiter „Bauwerke“ im Minecraft-Bereich – mit Auswahl des Servers
-    'minecraft.tabs': [{ id: 'builds', title: 'Builds', icon: Box, Component: () => <Builds compact /> }],
+    'files.preview': [{ id: 'schematic-3d', title: '3D', match: BUILD, Component: Viewer }],
+    // Rechtsklick im Datei-Browser: „In 3D ansehen“ öffnet die Vorschau (dort ist 3D voreingestellt)
+    'files.actions': [{ id: 'view-3d', title: 'View in 3D', icon: Box, when: (e) => !e.dir && BUILD.test(e.name), run: (e) => e.open() }],
   },
 };

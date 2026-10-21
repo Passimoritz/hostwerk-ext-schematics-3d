@@ -33,3 +33,18 @@ export function countsUpTo(heights, levels) {
   for (let i = 1; i < levels; i++) out[i] += out[i - 1];
   return out;
 }
+
+/** CSV (Semikolon, für Tabellenprogramme in DE und EN): Block; Anzahl; Stapel; Shulkerkisten (1 Nachkommastelle). */
+export function asCsv(list, { header = ['Block', 'Count', 'Stacks', 'Shulker boxes'] } = {}) {
+  const q = (v) => { const x = String(v); return /[;"\n]/.test(x) ? `"${x.replace(/"/g, '""')}"` : x; };
+  const rows = list.map((m) => [m.label, m.count, m.count >= STACK ? `${m.stacks}${m.rest ? ` + ${m.rest}` : ''}` : '', Math.round(m.shulkers * 10) / 10]);
+  return `\uFEFF${[header, ...rows].map((r) => r.map(q).join(';')).join('\r\n')}\r\n`;
+}
+
+/** Vergleich zweier Materiallisten: nur geänderte Blöcke, größte Änderung zuerst. → [{ name, label, a, b, delta }] (delta = a − b) */
+export function diffMaterials(a, b) {
+  const map = new Map();
+  for (const m of a || []) map.set(m.name, { name: m.name, label: m.label, a: m.count, b: 0 });
+  for (const m of b || []) { const x = map.get(m.name) || { name: m.name, label: m.label, a: 0, b: 0 }; x.b = m.count; map.set(m.name, x); }
+  return [...map.values()].map((x) => ({ ...x, delta: x.a - x.b })).filter((x) => x.delta !== 0).sort((p, q) => Math.abs(q.delta) - Math.abs(p.delta) || p.label.localeCompare(q.label));
+}
