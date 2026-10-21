@@ -10,6 +10,7 @@ Look at Minecraft builds in 3D before you place them: .schem (WorldEdit/Sponge),
 
 ## What it does
 
+- **Where:** Files (right-click “View in 3D” and the preview) – no own sidebar entry since 1.2.1; the full page stays under Extensions → Open
 - **At home in the file browser:** build files open in 3D right in the preview, right-click “View in 3D” (SDK 3.2: `files.actions`)
 - 3D view – turn, zoom, look inside; also with the keyboard (arrows rotate, + / − zoom, Page up/down change the layer, 0 resets)
 - Optionally an own page with every build of your servers (sidebar under Files, can be hidden) – the former tab in the Minecraft area is gone

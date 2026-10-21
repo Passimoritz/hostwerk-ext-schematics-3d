@@ -10,6 +10,7 @@ Minecraft-Bauwerke in 3D ansehen, bevor du sie setzt: .schem (WorldEdit/Sponge),
 
 ## Was sie kann
 
+- **Wo:** Dateien (Rechtsklick „In 3D ansehen“ und Vorschau) – seit 1.2.1 ohne eigenen Seitenleisten-Eintrag; die ganze Seite bleibt unter Erweiterungen → Öffnen
 - **Im Datei-Browser zu Hause:** Bauwerk-Dateien öffnen sich in der Vorschau direkt in 3D, Rechtsklick „In 3D ansehen“ (SDK 3.2: `files.actions`)
 - 3D-Ansicht – drehen, zoomen, hineinschauen; auch per Tastatur (Pfeile drehen, + / − zoomt, Bild auf/ab wechselt die Ebene, 0 setzt zurück)
 - Optional eine eigene Seite mit allen Bauwerken deiner Server (in der Seitenleiste unter Dateien, ausblendbar) – der frühere Reiter im Minecraft-Bereich entfällt

@@ -1,3 +1,7 @@
+## 1.2.1
+
+- Lives where it belongs: Files (right-click “View in 3D” and the preview) – no own sidebar entry any more (Hostwerk 3.0+); the full page stays under Extensions → Open and can be pinned in the sidebar settings. / Steckt jetzt dort, wo sie hingehört: Dateien (Rechtsklick „In 3D ansehen“ und Vorschau) – kein eigener Seitenleisten-Eintrag mehr (Hostwerk 3.0+); die ganze Seite bleibt unter Erweiterungen → Öffnen und lässt sich in den Seitenleisten-Einstellungen anheften.
+
 ## 1.2.0
 
 - Lives in the file browser now: the 3D view is the preview of build files, and the right-click menu offers “View in 3D” (Hostwerk with SDK 3.2). The tab in the Minecraft area is gone; the own page stays optional (sidebar under Files). / Zuhause im Datei-Browser: Vorschau in 3D und Rechtsklick „In 3D ansehen“; der Reiter im Minecraft-Bereich entfällt, die eigene Seite bleibt optional (Seitenleiste unter Dateien).
