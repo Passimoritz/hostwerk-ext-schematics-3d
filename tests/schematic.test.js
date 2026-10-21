@@ -75,3 +75,31 @@ test('finds build files in server folders, skips worlds', () => {
 test('every German text has a value', () => {
   for (const [k, v] of Object.entries(de)) if (k !== '$patterns') assert.ok(typeof v === 'string' && v.trim(), k);
 });
+
+test('vanilla structure (.nbt): size, palette, blocks with pos and state; several palettes take the first', () => {
+  const f = path.join(DIR, 'hut.nbt');
+  const block = (x, y, z, state) => C({ pos: LIST(T.INT, [x, y, z]), state: I(state) }).v;
+  const pal = LIST(T.COMPOUND, [C({ Name: STR('minecraft:air') }).v, C({ Name: STR('minecraft:oak_planks') }).v, C({ Name: STR('minecraft:glass_pane') }).v]);
+  nbt.write(f, { name: '', root: C({ DataVersion: I(3700), size: LIST(T.INT, [2, 1, 2]), palette: pal, blocks: LIST(T.COMPOUND, [block(0, 0, 0, 1), block(1, 0, 0, 1), block(0, 0, 1, 2), block(1, 0, 1, 0), block(9, 9, 9, 1)]) }) });
+  const r = schem.parse(f);
+  assert.strictEqual(r.format, 'structure');
+  assert.deepStrictEqual(r.size, { x: 2, y: 1, z: 2 });
+  assert.strictEqual(r.total, 3, 'air and blocks outside the size are left out');
+  assert.deepStrictEqual(Object.fromEntries(r.palette.map((n, i) => [n, r.counts[i]])), { 'minecraft:oak_planks': 2, 'minecraft:glass_pane': 1 });
+  const multi = path.join(DIR, 'wreck.nbt');
+  nbt.write(multi, { name: '', root: C({ size: LIST(T.INT, [1, 1, 1]), palettes: LIST(T.LIST, [{ lt: T.COMPOUND, items: [C({ Name: STR('minecraft:stone') }).v] }]), blocks: LIST(T.COMPOUND, [block(0, 0, 0, 0)]) }) });
+  assert.deepStrictEqual(schem.parse(multi).palette, ['minecraft:stone']);
+  const base = path.join(DIR, 'srv2');
+  fs.mkdirSync(path.join(base, 'structures'), { recursive: true });
+  fs.copyFileSync(f, path.join(base, 'structures', 'hut.nbt'));
+  assert.deepStrictEqual(findBuilds(base).map((x) => x.path), ['structures/hut.nbt']);
+});
+
+test('material list counts hidden blocks too', () => {
+  const pal = { 'minecraft:air': I(0), 'minecraft:stone': I(1) };
+  const f = path.join(DIR, 'cube.schem');
+  nbt.write(f, { name: 'Schematic', root: C({ Version: I(2), Width: S(3), Height: S(3), Length: S(3), Palette: C(pal), BlockData: BYTES(varints(Array(27).fill(1))) }) });
+  const r = schem.parse(f);
+  assert.deepStrictEqual(r.counts, [27]);
+  assert.strictEqual(r.shown, 26);
+});

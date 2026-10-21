@@ -11,7 +11,11 @@ Minecraft-Bauwerke in 3D ansehen, bevor du sie setzt: .schem (WorldEdit/Sponge),
 ## Was sie kann
 
 - 3D-Ansicht – drehen, zoomen, hineinschauen
-- Eigene Seite mit allen Bauwerken deiner Server
+- Eigene Seite mit allen Bauwerken deiner Server und ein Reiter „Bauwerke“ im Minecraft-Bereich (Server wählbar)
+- Formate: .schem (WorldEdit/Sponge), .litematic, .schematic (MCEdit) und Vanilla-.nbt-Strukturen
+- Ebenen-Schieber – Schicht für Schicht von unten
+- Materialliste mit Anzahl und 64er-Stapeln (auch verdeckte Blöcke), als Text kopieren
+- Ansicht als PNG-Bild speichern
 - Direkt in der Dateivorschau von Hostwerks Dateibrowser
 - Läuft auf diesem PC – nichts wird hochgeladen
 

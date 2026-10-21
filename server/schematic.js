@@ -4,7 +4,9 @@
  *   .schem       Sponge format v2 (Palette + BlockData) and v3 (Blocks { Palette, Data }) – indexes as VarInt
  *   .schematic   old MCEdit format (Blocks + Data, numeric ids)
  *   .litematic   Litematica (regions, BlockStatePalette, BlockStates as densely packed longs)
- * Result: { format, size: { x, y, z }, palette: [block name …], blocks: [x, y, z, paletteIndex, …], total, shown }
+ *   .nbt         vanilla structure files (structure block, data packs: size, palette/palettes, blocks with pos and state)
+ * Result: { format, size: { x, y, z }, palette: [block name …], blocks: [x, y, z, paletteIndex, …], counts: [blocks per
+ *   palette entry – ALL blocks, also hidden ones, for the material list], total, shown }
  * Only visible blocks are sent (at least one side touches air) – so even big builds stay smooth.
  */
 const nbt = require('./nbt');
@@ -78,6 +80,26 @@ function parse(file) {
     }
     return finish('litematic', size, palette, grid);
   }
+  // ---------- Vanilla-Struktur (.nbt) ----------
+  const sizeL = get(c, 'size'); const blocksL = get(c, 'blocks');
+  if (sizeL && blocksL && Array.isArray(sizeL.items) && Array.isArray(blocksL.items) && sizeL.items.length === 3) {
+    const [sx, sy, sz] = sizeL.items.map(num);
+    if (!(sx > 0 && sy > 0 && sz > 0)) throw Object.assign(new Error('Unknown schematic format.'), { unknownFormat: true });
+    // Mehrere Paletten (palettes) = Varianten desselben Bauwerks, z. B. Schiffswracks – die erste reicht für die Ansicht
+    const palL = get(c, 'palette') || ((get(c, 'palettes') || { items: [] }).items[0]) || { items: [] };
+    const names = (palL.items || []).map((it) => stripState(get(it, 'Name') || 'minecraft:air'));
+    const size = { x: sx, y: sy, z: sz };
+    const palette = []; const pmap = new Map(); const grid = makeGrid(size);
+    for (const b of blocksL.items) {
+      const pos = get(b, 'pos'); const name = names[num(get(b, 'state'))] || 'minecraft:air';
+      if (!pos || !Array.isArray(pos.items) || AIR.test(name)) continue;
+      const [x, y, z] = pos.items.map(num);
+      if (x < 0 || y < 0 || z < 0 || x >= sx || y >= sy || z >= sz) continue;
+      if (!pmap.has(name)) { pmap.set(name, palette.length); palette.push(name); }
+      grid.set(x, y, z, pmap.get(name) + 1);
+    }
+    return finish('structure', size, palette, grid);
+  }
   // ---------- Sponge ----------
   const W = num(get(c, 'Width')); const H = num(get(c, 'Height')); const L = num(get(c, 'Length'));
   if (!W || !H || !L) throw Object.assign(new Error('Unknown schematic format.'), { unknownFormat: true });
@@ -132,15 +154,16 @@ function makeGrid(size) {
 
 function finish(format, size, palette, grid) {
   const blocks = []; let total = 0; let shown = 0;
+  const counts = new Array(palette.length).fill(0); // Materialliste: alle Blöcke, auch verdeckte
   const transparent = new Set(palette.map((n, i) => (/glass|leaves|water|ice|fence|pane|bars|torch|flower|grass$|fern|vine|rail|slab|stairs|door|trapdoor|sign|carpet|button|lever/.test(n) ? i + 1 : 0)).filter(Boolean));
   const open = (x, y, z) => { const v = grid.get(x, y, z); return !v || transparent.has(v); };
   grid.each((x, y, z, v) => {
-    total++;
+    total++; counts[v - 1]++;
     if (shown >= MAX_BLOCKS) return;
     if (!(open(x + 1, y, z) || open(x - 1, y, z) || open(x, y + 1, z) || open(x, y - 1, z) || open(x, y, z + 1) || open(x, y, z - 1))) return; // fully hidden
     blocks.push(x, y, z, v - 1); shown++;
   });
-  return { format, size, palette, blocks, total, shown, truncated: shown >= MAX_BLOCKS };
+  return { format, size, palette, blocks, counts, total, shown, truncated: shown >= MAX_BLOCKS };
 }
 
 module.exports = { parse, readVarints, unpackLitematic };

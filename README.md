@@ -11,7 +11,11 @@ Look at Minecraft builds in 3D before you place them: .schem (WorldEdit/Sponge),
 ## What it does
 
 - 3D view – turn, zoom, look inside
-- Own page with every build of your servers
+- Own page with every build of your servers, and a tab “Builds” in the Minecraft area (choose the server)
+- Formats: .schem (WorldEdit/Sponge), .litematic, .schematic (MCEdit) and vanilla .nbt structures
+- Layer slider – layer by layer from the bottom
+- Material list with counts and stacks of 64 (hidden blocks included), copy as text
+- Save the view as a PNG picture
 - Right in the file preview of Hostwerk’s file browser
 - Runs on this PC – nothing is uploaded
 

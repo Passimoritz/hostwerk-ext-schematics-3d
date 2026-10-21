@@ -8,10 +8,10 @@ const fs = require('fs');
 const path = require('path');
 const { parse } = require('./schematic');
 
-const EXT = /\.(schem|schematic|litematic)$/i;
+const EXT = /\.(schem|schematic|litematic|nbt)$/i;
 const SKIP = /^(world|world_nether|world_the_end|libraries|cache|logs|crash-reports|versions|\.hostwerk.*|node_modules)$/i;
 
-/** Build files below a folder (depth 5, at most 300) – plugins/WorldEdit/schematics, schematics/, config/… */
+/** Build files below a folder (depth 5, at most 300) – plugins/WorldEdit/schematics, schematics/, structures/, config/… */
 function findBuilds(base, max = 300) {
   const out = [];
   const walk = (dir, rel, depth) => {

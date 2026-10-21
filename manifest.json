@@ -6,10 +6,10 @@
     "en": "Schematics in 3D"
   },
   "description": {
-    "de": "Minecraft-Bauwerke in 3D ansehen, bevor du sie setzt: .schem (WorldEdit/Sponge), .litematic (Litematica) und .schematic (MCEdit) – als eigene Seite mit allen Bauwerken deiner Server und direkt in der Dateivorschau.",
-    "en": "Look at Minecraft builds in 3D before you place them: .schem (WorldEdit/Sponge), .litematic (Litematica) and .schematic (MCEdit) – on its own page with every build of your servers and right in the file preview."
+    "de": "Minecraft-Bauwerke in 3D ansehen, bevor du sie setzt: .schem (WorldEdit/Sponge), .litematic (Litematica), .schematic (MCEdit) und .nbt (Konstruktionsblock) – mit Ebenen-Schieber, Materialliste und Bild-Export, als eigene Seite, als Reiter im Minecraft-Bereich und direkt in der Dateivorschau.",
+    "en": "Look at Minecraft builds in 3D before you place them: .schem (WorldEdit/Sponge), .litematic (Litematica), .schematic (MCEdit) and .nbt (structure block) – with a layer slider, material list and picture export, on its own page, as a tab in the Minecraft area and right in the file preview."
   },
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": "Hostwerk",
   "homepage": "https://github.com/Passimoritz/hostwerk-ext-schematics-3d",
   "license": "MIT",
@@ -30,12 +30,21 @@
       "de": "Minecraft-Bauwerke ansehen.",
       "en": "Look at Minecraft builds."
     },
-    "icon": "box"
+    "icon": "box",
+    "nav": {
+      "group": "server",
+      "after": "mc"
+    }
   },
   "backend": "server/index.js",
   "ui": "ui/index.js",
   "screenshots": [
     "docs/screenshot.png",
     "docs/screenshot.de.png"
-  ]
+  ],
+  "allowExtensions": {
+    "*": [
+      "tabs"
+    ]
+  }
 }

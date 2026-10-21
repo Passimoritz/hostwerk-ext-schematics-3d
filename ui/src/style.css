@@ -1,9 +1,19 @@
-.schem-view { display: flex; flex-direction: column; gap: 6px; }
-.schem-canvas { width: 100%; height: 440px; border-radius: 10px; background: var(--surface-2); overflow: hidden; }
-.schem-layout { display: grid; grid-template-columns: minmax(260px, 340px) 1fr; gap: 14px; align-items: start; }
+.schem-view { display: flex; flex-direction: column; gap: var(--sp-2); }
+.schem-canvas { width: 100%; height: 440px; border-radius: var(--r-lg); background: var(--surface-2); overflow: hidden; }
+.schem-layout { display: grid; grid-template-columns: minmax(260px, 340px) 1fr; gap: var(--sp-3); align-items: start; }
 .schem-list { max-height: calc(100vh - 220px); overflow: auto; }
-.schem-group { padding: 10px 14px 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.schem-compact .schem-list { max-height: 560px; }
+.schem-filter { gap: var(--sp-2); }
+.schem-none { padding: 0 var(--sp-4) var(--sp-3); }
+.schem-group { padding: var(--sp-3) var(--sp-4) var(--sp-1); font-size: var(--fs-2xs); font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
 .schem-item { width: 100%; border: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+.schem-item-text { min-width: 0; text-align: left; }
 .schem-item:hover, .schem-item:focus-visible { background: var(--surface-2); }
 .schem-item.on { background: var(--accent-soft); }
+.schem-title { margin-bottom: var(--sp-2); }
+.schem-tools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); }
+.schem-layer { display: inline-flex; align-items: center; gap: var(--sp-2); flex: 1 1 260px; min-height: 24px; }
+.schem-layer input[type=range] { flex: 1; min-width: 120px; accent-color: var(--accent); }
+.schem-materials { max-height: 320px; overflow: auto; border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--sp-2) var(--sp-3); }
+.schem-swatch { display: inline-block; width: 12px; height: 12px; border-radius: var(--r-xs); margin-right: var(--sp-2); vertical-align: -1px; border: 1px solid var(--line); }
 @media (max-width: 900px) { .schem-layout { grid-template-columns: 1fr; } .schem-canvas { height: 320px; } }
