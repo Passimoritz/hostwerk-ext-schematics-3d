@@ -9,7 +9,7 @@
     "de": "Minecraft-Bauwerke in 3D ansehen, bevor du sie setzt: .schem (WorldEdit/Sponge), .litematic (Litematica), .schematic (MCEdit) und .nbt (Konstruktionsblock) – direkt in der Dateivorschau und per Rechtsklick „In 3D ansehen“, mit Ebenen-Schnitt, Materialliste (kopieren, CSV), Vergleich zweier Stände, Bild-Export und Tastatursteuerung. Dazu optional eine Seite mit allen Bauwerken deiner Server.",
     "en": "Look at Minecraft builds in 3D before you place them: .schem (WorldEdit/Sponge), .litematic (Litematica), .schematic (MCEdit) and .nbt (structure block) – right in the file preview and with “View in 3D” in the right-click menu, with a layer slice, material list (copy, CSV), comparison of two versions, picture export and keyboard control. Plus an optional page with every build of your servers."
   },
-  "version": "1.2.1",
+  "version": "1.2.2",
   "author": "Hostwerk",
   "homepage": "https://github.com/Passimoritz/hostwerk-ext-schematics-3d",
   "license": "MIT",
