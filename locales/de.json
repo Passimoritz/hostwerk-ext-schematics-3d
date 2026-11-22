@@ -11,7 +11,6 @@
   "Pick a build": "Bauwerk wählen",
   "Choose a file on the left – it opens here in 3D.": "Links eine Datei wählen – sie öffnet sich hier in 3D.",
   "3D view of the build": "3D-Ansicht des Bauwerks",
-  "{x} × {y} × {z} blocks · {total} blocks, {shown} visible · {kinds} block types": "{x} × {y} × {z} Blöcke · {total} Blöcke, {shown} sichtbar · {kinds} Blockarten",
   "shortened": "gekürzt",
   "Reading the build …": "Bauwerk wird gelesen …",
   "Drag to rotate, scroll to zoom": "Ziehen dreht, Mausrad zoomt",
@@ -61,5 +60,19 @@
   "Other": "Anderes",
   "Difference": "Unterschied",
   "3D view of the build – arrow keys rotate, plus and minus zoom, Page up and Page down change the layer, 0 resets the view": "3D-Ansicht des Bauwerks – Pfeiltasten drehen, Plus und Minus zoomen, Bild auf/ab wechselt die Ebene, 0 setzt die Ansicht zurück",
-  "or click and use the arrow keys": "oder anklicken und Pfeiltasten nutzen"
+  "or click and use the arrow keys": "oder anklicken und Pfeiltasten nutzen",
+  "The build is too big for the preview (over 256 million blocks).": "Das Bauwerk ist für die Vorschau zu groß (über 256 Millionen Blöcke).",
+  "The file could not be read – it is damaged or not a build file.": "Die Datei ließ sich nicht lesen – sie ist beschädigt oder kein Bauwerk.",
+  "The file does not exist (any more).": "Die Datei gibt es nicht (mehr).",
+  "This build is empty – it contains only air.": "Dieses Bauwerk ist leer – es enthält nur Luft.",
+  "3D is not available here – the graphics card or driver does not offer WebGL.": "3D ist hier nicht verfügbar – Grafikkarte oder Treiber bieten kein WebGL.",
+  "{x} × {y} × {z} blocks": "{x} × {y} × {z} Blöcke",
+  "{n} block": "{n} Block",
+  "{n} blocks": "{n} Blöcke",
+  "{shown} visible": "{shown} sichtbar",
+  "{n} block type": "{n} Blockart",
+  "{n} block types": "{n} Blockarten",
+  "Search blocks …": "Blöcke suchen …",
+  "Search blocks": "Blöcke suchen",
+  "No block matches.": "Kein Block passt."
 }

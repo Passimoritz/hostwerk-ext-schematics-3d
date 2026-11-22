@@ -25,6 +25,9 @@ test('CSV: Kopfzeile, Semikolon, Anführungszeichen nur wo nötig, BOM für Tabe
   const lines = csv.replace(/^\uFEFF/, '').trim().split('\r\n');
   assert.deepStrictEqual(lines, ['Block;Anzahl;Stapel;Shulkerkisten', 'Stone;130;2 + 2;0.1', '"Oak;odd";3;;0']);
   assert.ok(csv.startsWith('\uFEFF'));
+  // Deutsch: Dezimalkomma (sonst macht Excel aus 1.5 ein Datum)
+  const de = asCsv(materials(['minecraft:stone'], [2600]), { locale: 'de-DE' }).replace(/^\uFEFF/, '').trim().split('\r\n');
+  assert.strictEqual(de[1], 'Stone;2600;40 + 40;1,5');
 });
 
 test('Vergleich: nur geänderte Blöcke, größte Änderung zuerst', async () => {
@@ -33,4 +36,22 @@ test('Vergleich: nur geänderte Blöcke, größte Änderung zuerst', async () =>
   const b = materials(['minecraft:stone', 'minecraft:dirt', 'minecraft:sand'], [40, 5, 2]);
   assert.deepStrictEqual(diffMaterials(a, b).map((x) => [x.label, x.a, x.b, x.delta]), [['Stone', 100, 40, 60], ['Glass', 7, 0, 7], ['Sand', 0, 2, -2]]);
   assert.deepStrictEqual(diffMaterials(a, a), []);
+});
+
+test('Blocknamen auf Deutsch (Holz, Farben, Stein-Treppen), Mods englisch, Suche über deutschen und englischen Namen', async () => {
+  const { germanBlockName } = await import('../ui/src/blocknames.mjs');
+  const { materials, matches, blockLabel } = await import('../ui/src/materials.mjs');
+  assert.strictEqual(germanBlockName('minecraft:oak_planks'), 'Eichenholzbretter');
+  assert.strictEqual(germanBlockName('minecraft:stripped_spruce_log'), 'Entrindeter Fichtenstamm');
+  assert.strictEqual(germanBlockName('minecraft:light_blue_concrete'), 'Hellblauer Beton');
+  assert.strictEqual(germanBlockName('minecraft:white_wool'), 'Weiße Wolle');
+  assert.strictEqual(germanBlockName('minecraft:polished_andesite_stairs'), 'Polierte Andesittreppe');
+  assert.strictEqual(germanBlockName('minecraft:cobblestone_wall'), 'Bruchsteinmauer');
+  assert.strictEqual(germanBlockName('mymod:oak_planks'), null, 'Mod-Blöcke behalten ihren Namen');
+  assert.strictEqual(blockLabel('minecraft:unknown_thing', 'de-DE'), 'Unknown thing', 'Unbekanntes: englisch abgeleitet');
+  const de = materials(['minecraft:oak_planks', 'minecraft:glass'], [10, 2], { lang: 'de-DE' });
+  assert.deepStrictEqual(de.map((m) => m.label), ['Eichenholzbretter', 'Glas']);
+  assert.ok(matches(de[0], 'eiche') && matches(de[0], 'oak') && matches(de[0], 'minecraft:oak_planks'));
+  assert.ok(!matches(de[1], 'eiche'));
+  assert.strictEqual(materials(['minecraft:oak_planks'], [1])[0].label, 'Oak planks', 'Englisch bleibt wie bisher');
 });

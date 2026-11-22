@@ -9,6 +9,7 @@ const path = require('path');
 const { parse } = require('./schematic');
 
 const EXT = /\.(schem|schematic|litematic|nbt)$/i;
+const WORLD = /^(world|world_nether|world_the_end)$/i;
 const SKIP = /^(world|world_nether|world_the_end|libraries|cache|logs|crash-reports|versions|\.hostwerk.*|node_modules)$/i;
 
 /** Build files below a folder (depth 5, at most 300) – plugins/WorldEdit/schematics, schematics/, structures/, config/… */
@@ -19,6 +20,8 @@ function findBuilds(base, max = 300) {
     let list = []; try { list = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
     for (const e of list) {
       if (out.length >= max) return;
+      // Welten nicht durchsuchen – nur deren generated/ (dort speichert der Konstruktionsblock: world/generated/<ns>/structures/*.nbt)
+      if (e.isDirectory() && depth === 0 && WORLD.test(e.name)) { walk(path.join(dir, e.name, 'generated'), `${e.name}/generated`, 2); continue; }
       if (e.isDirectory()) { if (!SKIP.test(e.name)) walk(path.join(dir, e.name), rel ? `${rel}/${e.name}` : e.name, depth + 1); continue; }
       if (!EXT.test(e.name)) continue;
       let st = null; try { st = fs.statSync(path.join(dir, e.name)); } catch { continue; }
@@ -38,12 +41,13 @@ function activate(host) {
       res.json({ ok: true, ...parse(full) });
     } catch (e) {
       if (e.status) return next(e);
-      res.json({ ok: false, error: e.unknownFormat ? host.t('Unknown schematic format.') : e.message });
+      // Kaputte oder abgeschnittene Dateien werfen technische Fehler (RangeError „offset out of range“, zlib …) – verständlich melden
+      res.json({ ok: false, error: e.unknownFormat ? host.t('Unknown schematic format.') : e.tooBig ? host.t(e.message) : e.code === 'ENOENT' ? host.t('The file does not exist (any more).') : host.t('The file could not be read – it is damaged or not a build file.') });
     }
   });
   host.router.get('/schematics', (req, res) => {
     const roots = ctx.files.roots().filter((r) => r.kind === 'mc');
-    res.json(roots.map((r) => ({ root: r.id, label: r.label.replace(/^Minecraft: /, ''), files: findBuilds(r.path) })).filter((r) => r.files.length));
+    res.json(roots.map((r) => ({ root: r.id, label: r.label.replace(/^[^:]+:\s+/, '') /* „Minecraft-Server: Survival“ → „Survival“ (Vorsilbe je nach Sprache) */, files: findBuilds(r.path) })).filter((r) => r.files.length));
   });
 }
 

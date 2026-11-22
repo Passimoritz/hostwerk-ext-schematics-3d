@@ -70,6 +70,38 @@ test('finds build files in server folders, skips worlds', () => {
   fs.writeFileSync(path.join(base, 'world', 'region', 'trap.schem'), 'x');
   const found = findBuilds(base);
   assert.deepStrictEqual(found.map((f) => f.path), ['plugins/WorldEdit/schematics/tower.schem']);
+  // Konstruktionsblock-Speicherort in der Welt wird trotzdem gefunden
+  fs.mkdirSync(path.join(base, 'world', 'generated', 'minecraft', 'structures'), { recursive: true });
+  fs.writeFileSync(path.join(base, 'world', 'generated', 'minecraft', 'structures', 'hut.nbt'), 'x');
+  assert.deepStrictEqual(findBuilds(base).map((f) => f.path).sort(), ['plugins/WorldEdit/schematics/tower.schem', 'world/generated/minecraft/structures/hut.nbt']);
+});
+
+test('broken and oversized files give understandable errors instead of crashes', () => {
+  const lit = path.join(DIR, 'none.litematic');
+  nbt.write(lit, { name: '', root: C({ Regions: C({}) }) });
+  assert.throws(() => schem.parse(lit), (e) => e.unknownFormat === true, 'Litematica without regions');
+  const huge = path.join(DIR, 'huge.schem');
+  nbt.write(huge, { name: '', root: C({ Width: S(30000), Height: S(30000), Length: S(30000), Palette: C({ 'minecraft:stone': I(0) }), BlockData: BYTES([0]) }) });
+  assert.throws(() => schem.parse(huge), (e) => e.tooBig === true, 'no giant memory allocation');
+  assert.ok(de['The build is too big for the preview (over 256 million blocks).']);
+  // Breite über 32767 steht als negativer Short in der Datei – vorzeichenlos lesen
+  const wide = path.join(DIR, 'wide.schem');
+  nbt.write(wide, { name: '', root: C({ Width: S(-32768), Height: S(1), Length: S(1), Palette: C({ 'minecraft:air': I(0), 'minecraft:stone': I(1) }), BlockData: BYTES([1]) }) });
+  const w = schem.parse(wide);
+  assert.strictEqual(w.size.x, 32768);
+  assert.strictEqual(w.total, 1);
+  assert.strictEqual(w.truncated, false);
+});
+
+test('short data with huge dimensions stays fast and small (no 1 GB array, no endless loop)', () => {
+  assert.strictEqual(schem.readVarints(Buffer.from([1, 2]), 250e6).length, 2);
+  assert.strictEqual(schem.unpackLitematic([1n], 2, 36e6).length, 32);
+  const big = path.join(DIR, 'sparse.litematic');
+  const pal = LIST(T.COMPOUND, [[['Name', STR('minecraft:air')]], [['Name', STR('minecraft:stone')]]]);
+  nbt.write(big, { name: '', root: C({ Regions: C({ R: C({ Position: C({ x: I(0), y: I(0), z: I(0) }), Size: C({ x: I(600), y: I(100), z: I(600) }), BlockStatePalette: pal, BlockStates: LONGS([1n]) }) }) }) });
+  const t0 = Date.now(); const r = schem.parse(big);
+  assert.strictEqual(r.total, 1);
+  assert.ok(Date.now() - t0 < 3000, 'sparse litematic parsed quickly');
 });
 
 test('every German text has a value', () => {

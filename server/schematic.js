@@ -14,16 +14,25 @@ const nbt = require('./nbt');
 const AIR = /^minecraft:(air|cave_air|void_air|structure_void)$|^air$/;
 const MAX_BLOCKS = 250000;
 const MAX_VOLUME = 64 * 1024 * 1024;
+// Obergrenze für die Vorschau: mehr Zellen bräuchten Gigabytes Speicher (eine fast leere, stark gepackte Datei kann riesig sein)
+const MAX_CELLS = 256 * 1024 * 1024;
 
 const get = (c, name) => { const hit = (c || []).find(([k]) => k === name); return hit ? hit[1].v : undefined; };
 const num = (v) => (typeof v === 'bigint' ? Number(v) : Number(v || 0));
 const stripState = (s) => String(s || '').replace(/\[.*$/, '');
+const unknown = () => Object.assign(new Error('Unknown schematic format.'), { unknownFormat: true });
+/** Größe prüfen, bevor Speicher angelegt wird: leer/kaputt → unbekanntes Format, zu groß → eigener Fehler (statt „Array buffer allocation failed“). */
+const checkCells = (n) => { if (!(n > 0) || !Number.isFinite(n)) throw unknown(); if (n > MAX_CELLS) throw Object.assign(new Error('The build is too big for the preview (over 256 million blocks).'), { tooBig: true }); return n; };
+// Sponge speichert Breite/Höhe/Länge als vorzeichenlose Shorts (über 32767 wären sie sonst negativ)
+const u16 = (v) => { const n = num(v); return n < 0 && n >= -32768 ? n + 65536 : n; };
 
 // Old numeric ids (MCEdit) → names for the colours
 const LEGACY = { 1: 'stone', 2: 'grass_block', 3: 'dirt', 4: 'cobblestone', 5: 'oak_planks', 7: 'bedrock', 8: 'water', 9: 'water', 10: 'lava', 11: 'lava', 12: 'sand', 13: 'gravel', 14: 'gold_ore', 15: 'iron_ore', 16: 'coal_ore', 17: 'oak_log', 18: 'oak_leaves', 20: 'glass', 22: 'lapis_block', 24: 'sandstone', 35: 'white_wool', 41: 'gold_block', 42: 'iron_block', 45: 'bricks', 47: 'bookshelf', 48: 'mossy_cobblestone', 49: 'obsidian', 53: 'oak_stairs', 57: 'diamond_block', 79: 'ice', 80: 'snow_block', 82: 'clay', 87: 'netherrack', 89: 'glowstone', 98: 'stone_bricks', 102: 'glass_pane', 112: 'nether_bricks', 121: 'end_stone', 133: 'emerald_block', 152: 'redstone_block', 155: 'quartz_block', 159: 'terracotta', 162: 'acacia_log', 168: 'prismarine', 172: 'terracotta', 174: 'packed_ice', 251: 'white_concrete' };
 
 function readVarints(buf, count) {
-  const out = new Uint32Array(count);
+  // Jeder Wert braucht mindestens ein Byte: nie mehr anlegen als die Daten hergeben (eine kurze Datei mit riesigen Maßen
+  // belegte sonst bis zu 1 GB und blockierte Hostwerk sekundenlang)
+  const out = new Uint32Array(Math.min(count, buf.length));
   let p = 0;
   for (let i = 0; i < count && p < buf.length; i++) {
     let v = 0; let shift = 0; let b;
@@ -35,10 +44,11 @@ function readVarints(buf, count) {
 
 /** Litematica: values of "bits" bits, packed densely across long boundaries. */
 function unpackLitematic(longs, bits, count) {
-  const out = new Uint32Array(count);
+  // Nur so viele Werte, wie in den Longs stecken – der Rest ist Luft (sonst Millionen BigInt-Schritte für eine fast leere Datei)
+  const out = new Uint32Array(Math.min(count, Math.floor((longs.length * 64) / bits)));
   const words = longs.map((x) => BigInt.asUintN(64, BigInt(x)));
   const mask = (1n << BigInt(bits)) - 1n;
-  for (let i = 0; i < count; i++) {
+  for (let i = 0; i < out.length; i++) {
     const startBit = BigInt(i) * BigInt(bits);
     const w = Number(startBit >> 6n); const off = startBit & 63n;
     let v = (words[w] || 0n) >> off;
@@ -61,22 +71,30 @@ function parse(file) {
       const pos = get(r, 'Position'); const sz = get(r, 'Size');
       const sx = num(get(sz, 'x')); const sy = num(get(sz, 'y')); const sz2 = num(get(sz, 'z'));
       const ax = Math.abs(sx); const ay = Math.abs(sy); const az = Math.abs(sz2);
+      if (!(ax * ay * az)) continue; // leere Region
+      checkCells(ax * ay * az);
       const min = { x: num(get(pos, 'x')) + (sx < 0 ? sx + 1 : 0), y: num(get(pos, 'y')) + (sy < 0 ? sy + 1 : 0), z: num(get(pos, 'z')) + (sz2 < 0 ? sz2 + 1 : 0) };
       const pal = ((get(r, 'BlockStatePalette') || { items: [] }).items).map((it) => String(get(it, 'Name') || 'minecraft:air'));
       const bits = Math.max(2, Math.ceil(Math.log2(Math.max(1, pal.length))));
       const idx = unpackLitematic(get(r, 'BlockStates') || [], bits, ax * ay * az);
       parts.push({ min, ax, ay, az, pal, idx });
     }
+    if (!parts.length) throw unknown();
     const lo = { x: Math.min(...parts.map((p) => p.min.x)), y: Math.min(...parts.map((p) => p.min.y)), z: Math.min(...parts.map((p) => p.min.z)) };
     const hi = { x: Math.max(...parts.map((p) => p.min.x + p.ax)), y: Math.max(...parts.map((p) => p.min.y + p.ay)), z: Math.max(...parts.map((p) => p.min.z + p.az)) };
     const size = { x: hi.x - lo.x, y: hi.y - lo.y, z: hi.z - lo.z };
+    checkCells(size.x * size.y * size.z);
     const palette = []; const pmap = new Map();
     const cell = (name) => { if (!pmap.has(name)) { pmap.set(name, palette.length); palette.push(name); } return pmap.get(name); };
     const grid = makeGrid(size);
-    for (const p of parts) for (let y = 0; y < p.ay; y++) for (let z = 0; z < p.az; z++) for (let x = 0; x < p.ax; x++) {
-      const name = p.pal[p.idx[(y * p.az + z) * p.ax + x]] || 'minecraft:air';
-      if (AIR.test(name)) continue;
-      grid.set(p.min.x - lo.x + x, p.min.y - lo.y + y, p.min.z - lo.z + z, cell(stripState(name)) + 1);
+    for (const p of parts) {
+      const air = p.pal.map((name) => AIR.test(name)); // Luft einmal je Palette prüfen, nicht je Block
+      for (let i = 0; i < p.idx.length; i++) {
+        const name = p.pal[p.idx[i]]; if (!name || air[p.idx[i]]) continue;
+        const v = cell(stripState(name)) + 1;
+        const x = i % p.ax; const z = Math.floor(i / p.ax) % p.az; const y = Math.floor(i / (p.ax * p.az));
+        grid.set(p.min.x - lo.x + x, p.min.y - lo.y + y, p.min.z - lo.z + z, v);
+      }
     }
     return finish('litematic', size, palette, grid);
   }
@@ -84,7 +102,8 @@ function parse(file) {
   const sizeL = get(c, 'size'); const blocksL = get(c, 'blocks');
   if (sizeL && blocksL && Array.isArray(sizeL.items) && Array.isArray(blocksL.items) && sizeL.items.length === 3) {
     const [sx, sy, sz] = sizeL.items.map(num);
-    if (!(sx > 0 && sy > 0 && sz > 0)) throw Object.assign(new Error('Unknown schematic format.'), { unknownFormat: true });
+    if (!(sx > 0 && sy > 0 && sz > 0)) throw unknown();
+    checkCells(sx * sy * sz);
     // Mehrere Paletten (palettes) = Varianten desselben Bauwerks, z. B. Schiffswracks – die erste reicht für die Ansicht
     const palL = get(c, 'palette') || ((get(c, 'palettes') || { items: [] }).items[0]) || { items: [] };
     const names = (palL.items || []).map((it) => stripState(get(it, 'Name') || 'minecraft:air'));
@@ -101,8 +120,9 @@ function parse(file) {
     return finish('structure', size, palette, grid);
   }
   // ---------- Sponge ----------
-  const W = num(get(c, 'Width')); const H = num(get(c, 'Height')); const L = num(get(c, 'Length'));
-  if (!W || !H || !L) throw Object.assign(new Error('Unknown schematic format.'), { unknownFormat: true });
+  const W = u16(get(c, 'Width')); const H = u16(get(c, 'Height')); const L = u16(get(c, 'Length'));
+  if (!(W > 0 && H > 0 && L > 0)) throw unknown();
+  checkCells(W * H * L);
   const size = { x: W, y: H, z: L };
   const blocks3 = get(c, 'Blocks');
   const palC = Array.isArray(blocks3) ? get(blocks3, 'Palette') : get(c, 'Palette');
@@ -112,9 +132,10 @@ function parse(file) {
     for (const [name, node] of palC) byIdx[num(node.v)] = stripState(name);
     const idx = readVarints(dataC, W * H * L);
     const palette = []; const pmap = new Map(); const grid = makeGrid(size);
+    const airAt = byIdx.map((name) => AIR.test(name || 'minecraft:air')); // einmal je Palette statt je Block
     for (let i = 0; i < idx.length; i++) {
-      const name = byIdx[idx[i]] || 'minecraft:air';
-      if (AIR.test(name)) continue;
+      const name = byIdx[idx[i]];
+      if (!name || airAt[idx[i]]) continue;
       if (!pmap.has(name)) { pmap.set(name, palette.length); palette.push(name); }
       const x = i % W; const z = Math.floor(i / W) % L; const y = Math.floor(i / (W * L));
       grid.set(x, y, z, pmap.get(name) + 1);
@@ -126,7 +147,7 @@ function parse(file) {
   if (ids && Buffer.isBuffer(ids)) {
     const add = get(c, 'AddBlocks');
     const palette = []; const pmap = new Map(); const grid = makeGrid(size);
-    for (let i = 0; i < ids.length; i++) {
+    for (let i = 0, n = Math.min(ids.length, W * H * L); i < n; i++) {
       let id = ids[i] & 0xff;
       if (add && Buffer.isBuffer(add)) id |= ((i & 1 ? add[i >> 1] & 0x0f : (add[i >> 1] & 0xf0) >> 4) << 8);
       if (!id) continue;
@@ -137,7 +158,7 @@ function parse(file) {
     }
     return finish('mcedit', size, palette, grid);
   }
-  throw Object.assign(new Error('Unknown schematic format.'), { unknownFormat: true });
+  throw unknown();
 }
 
 /** Occupancy as a dense array (up to 64 M cells) or a map (bigger). Values: 0 = air, otherwise palette index + 1. */
@@ -153,17 +174,17 @@ function makeGrid(size) {
 }
 
 function finish(format, size, palette, grid) {
-  const blocks = []; let total = 0; let shown = 0;
+  const blocks = []; let total = 0; let shown = 0; let cut = false;
   const counts = new Array(palette.length).fill(0); // Materialliste: alle Blöcke, auch verdeckte
   const transparent = new Set(palette.map((n, i) => (/glass|leaves|water|ice|fence|pane|bars|torch|flower|grass$|fern|vine|rail|slab|stairs|door|trapdoor|sign|carpet|button|lever/.test(n) ? i + 1 : 0)).filter(Boolean));
   const open = (x, y, z) => { const v = grid.get(x, y, z); return !v || transparent.has(v); };
   grid.each((x, y, z, v) => {
     total++; counts[v - 1]++;
-    if (shown >= MAX_BLOCKS) return;
     if (!(open(x + 1, y, z) || open(x - 1, y, z) || open(x, y + 1, z) || open(x, y - 1, z) || open(x, y, z + 1) || open(x, y, z - 1))) return; // fully hidden
+    if (shown >= MAX_BLOCKS) { cut = true; return; } // „gekürzt“ nur, wenn wirklich sichtbare Blöcke fehlen
     blocks.push(x, y, z, v - 1); shown++;
   });
-  return { format, size, palette, blocks, counts, total, shown, truncated: shown >= MAX_BLOCKS };
+  return { format, size, palette, blocks, counts, total, shown, truncated: cut };
 }
 
 module.exports = { parse, readVarints, unpackLitematic };

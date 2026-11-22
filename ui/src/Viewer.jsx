@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Layers, ListChecks, Copy, ImageDown, RefreshCw, FileDown, GitCompare, Keyboard } from 'lucide-react';
+import { Layers, ListChecks, Copy, ImageDown, RefreshCw, FileDown, GitCompare, Keyboard, Search } from 'lucide-react';
 import { get } from '@hostwerk/api';
 import { THREE, OrbitControls } from '@hostwerk/three';
 import { Btn, toast } from '@hostwerk/ui';
 import { t } from '@hostwerk/i18n';
 import { colorOf } from './colors.mjs';
-import { materials, asText, asCsv, diffMaterials, countsUpTo, STACK } from './materials.mjs';
+import { materials, matches, asText, asCsv, diffMaterials, countsUpTo, STACK } from './materials.mjs';
 
 /*
  * 3D view of a Minecraft build (.schem, .schematic, .litematic, vanilla .nbt): every visible block as a cube in one draw
@@ -28,15 +28,22 @@ export default function Viewer({ root, path, name }) {
   const [slice, setSlice] = useState(false); // nur die gewählte Ebene zeigen (Schnitt)
   const [other, setOther] = useState(null); // Vergleich: { path, data | error }
   const [siblings, setSiblings] = useState(null);
+  const [mq, setMq] = useState(''); // Suche in der Materialliste
+  const seenAttempt = useRef(0); // „Erneut versuchen“ behält Vergleich und Schnitt
+  const comparing = useRef(''); // zuletzt gewählter Vergleich – spätere Antworten älterer Wahl verwerfen
   useEffect(() => {
     let alive = true; let cleanup = () => {};
     setSt({ busy: true, error: null, data: null }); setLevel(null); scene3d.current = null;
+    // Andere Datei: Vergleich und Ordnerliste gehören zur alten Datei (sonst stand dort deren Vergleich weiter)
+    if (attempt === seenAttempt.current) { comparing.current = ''; setOther(null); setSiblings(null); setSlice(false); }
+    seenAttempt.current = attempt;
     get(`/files/schematic?root=${encodeURIComponent(root)}&path=${encodeURIComponent(path)}`).then((d) => {
       if (!alive) return;
       if (!d.ok) { setSt({ busy: false, error: d.error, data: null }); return; }
       const el = host.current; if (!el) return;
       const w = el.clientWidth || 640; const h = el.clientHeight || 440;
-      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      let renderer;
+      try { renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); } catch { setSt({ busy: false, error: t('3D is not available here – the graphics card or driver does not offer WebGL.'), data: null }); return; }
       renderer.localClippingEnabled = true; // Schnitt: eine Ebene allein zeigen
       const below = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0); // schneidet alles unter der Ebene weg (nur im Schnitt aktiv)
       renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1)); renderer.setSize(w, h);
@@ -80,7 +87,7 @@ export default function Viewer({ root, path, name }) {
       const cut = (on, y) => { below.constant = -y; for (const { mesh } of meshes) { mesh.material.clippingPlanes = on ? [below] : []; mesh.material.needsUpdate = true; } };
       scene3d.current = { meshes, orbit, zoom, reset, cut, snapshot: () => { renderer.render(scene, cam); return renderer.domElement.toDataURL('image/png'); } };
       setSt({ busy: false, error: null, data: d });
-      cleanup = () => { cancelAnimationFrame(raf); ro.disconnect(); controls.dispose(); renderer.dispose(); geo.dispose(); scene.traverse((o) => { if (o.material) o.material.dispose(); }); el.innerHTML = ''; scene3d.current = null; };
+      cleanup = () => { cancelAnimationFrame(raf); ro.disconnect(); controls.dispose(); renderer.dispose(); renderer.forceContextLoss(); geo.dispose(); scene.traverse((o) => { if (o.material) o.material.dispose(); }); el.innerHTML = ''; scene3d.current = null; };
     }).catch((e) => alive && setSt({ busy: false, error: e.message, data: null }));
     return () => { alive = false; cleanup(); };
   }, [root, path, attempt]);
@@ -100,9 +107,11 @@ export default function Viewer({ root, path, name }) {
     .then((l) => setSiblings((Array.isArray(l) ? l : []).filter((f) => !f.dir && /\.(schem|schematic|litematic|nbt)$/i.test(f.name) && full(f.name) !== path).map((f) => full(f.name))))
     .catch(() => setSiblings([]));
   const compareWith = (p) => {
+    comparing.current = p;
     if (!p) { setOther(null); return; }
     setOther({ path: p, data: null });
-    get(`/files/schematic?root=${encodeURIComponent(root)}&path=${encodeURIComponent(p)}`).then((r) => setOther(r.ok ? { path: p, data: r } : { path: p, error: r.error })).catch((e) => setOther({ path: p, error: e.message }));
+    const keep = (x) => { if (comparing.current === p) setOther(x); };
+    get(`/files/schematic?root=${encodeURIComponent(root)}&path=${encodeURIComponent(p)}`).then((r) => keep(r.ok ? { path: p, data: r } : { path: p, error: r.error })).catch((e) => keep({ path: p, error: e.message }));
   };
   const onKey = (e) => {
     const s = scene3d.current; if (!s || !st.data) return;
@@ -120,40 +129,43 @@ export default function Viewer({ root, path, name }) {
   };
 
   const d = st.data;
-  const list = useMemo(() => (d ? materials(d.palette, d.counts || []) : []), [d]);
+  const list = useMemo(() => (d ? materials(d.palette, d.counts || [], { lang: locale() }) : []), [d]);
+  const listShown = useMemo(() => list.filter((m) => matches(m, mq)), [list, mq]);
   const fileName = (name || String(path).split('/').pop() || 'build').replace(/\.[^.]+$/, '');
   const copyList = async () => {
     try { await navigator.clipboard.writeText(asText(list, { title: t('Materials for {name}', { name: fileName }), locale: locale(), stacksWord: t('stacks') })); toast.success(t('Material list copied')); } catch { toast.error(t('Could not copy')); }
   };
   const saveCsv = () => {
-    const blob = new Blob([asCsv(list, { header: [t('Block'), t('Count'), t('Stacks'), t('Shulker boxes')] })], { type: 'text/csv;charset=utf-8' });
+    const blob = new Blob([asCsv(list, { header: [t('Block'), t('Count'), t('Stacks'), t('Shulker boxes')], locale: locale() })], { type: 'text/csv;charset=utf-8' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${fileName}-materials.csv`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   };
-  const diff = useMemo(() => (d && other && other.data ? diffMaterials(materials(d.palette, d.counts || []), materials(other.data.palette, other.data.counts || [])) : null), [d, other]);
+  const diff = useMemo(() => (d && other && other.data ? diffMaterials(materials(d.palette, d.counts || [], { lang: locale() }), materials(other.data.palette, other.data.counts || [], { lang: locale() })) : null), [d, other]);
   const savePng = () => {
     const s = scene3d.current; if (!s) return;
     const a = document.createElement('a'); a.href = s.snapshot(); a.download = `${fileName}.png`; document.body.appendChild(a); a.click(); a.remove();
   };
-  const info = d ? t('{x} × {y} × {z} blocks · {total} blocks, {shown} visible · {kinds} block types', { x: d.size.x, y: d.size.y, z: d.size.z, total: num(d.total), shown: num(d.shown), kinds: d.palette.length }) + (d.truncated ? ` · ${t('shortened')}` : '') : '';
+  // Einzahl/Mehrzahl ohne pl() (erst ab SDK 2.10, die Erweiterung läuft ab 2.9): sonst „1 Blöcke“, „1 Blockarten“
+  const info = d ? [t('{x} × {y} × {z} blocks', { x: d.size.x, y: d.size.y, z: d.size.z }), `${d.total === 1 ? t('{n} block', { n: 1 }) : t('{n} blocks', { n: num(d.total) })}, ${t('{shown} visible', { shown: num(d.shown) })}`, d.palette.length === 1 ? t('{n} block type', { n: 1 }) : t('{n} block types', { n: d.palette.length })].join(' · ') + (d.truncated ? ` · ${t('shortened')}` : '') : '';
   const top = d ? (level == null ? d.size.y - 1 : level) : 0;
   return (
     <div className="schem-view">
       <div ref={host} className="schem-canvas" role="application" tabIndex={0} onKeyDown={onKey} aria-label={t('3D view of the build – arrow keys rotate, plus and minus zoom, Page up and Page down change the layer, 0 resets the view')} />
       {st.busy ? <div className="tiny muted">{t('Reading the build …')}</div>
         : st.error ? <div className="small c-err row-tight">{st.error}<Btn className="xs" icon={RefreshCw} onClick={() => setAttempt((x) => x + 1)}>Try again</Btn></div>
+          : d && !d.total ? <div className="small muted">{t('This build is empty – it contains only air.')}</div>
           : <div className="tiny muted row-tight">{`${info} · ${t('Drag to rotate, scroll to zoom')}`}<Keyboard size={12} aria-hidden="true" /><span>{t('or click and use the arrow keys')}</span></div>}
       {d && (
         <div className="schem-tools">
-          {d.size.y > 1 && (
+          {d.size.y > 1 && d.total > 0 && (
             <label className="schem-layer small">
               <Layers size={14} aria-hidden="true" />
               <span>{t('Layer {n} of {all}', { n: top + 1, all: d.size.y })}</span>
               <input type="range" min={0} max={d.size.y - 1} value={top} aria-label={t('Show layers up to')} onChange={(e) => setLevel(Number(e.target.value))} />
             </label>
           )}
-          {d.size.y > 1 && <label className="row-tight small schem-slice"><input type="checkbox" checked={slice} onChange={(e) => setSlice(e.target.checked)} />{t('Only this layer')}</label>}
-          <Btn className="sm" icon={ListChecks} aria-expanded={showList} onClick={() => setShowList((x) => !x)}>Material list</Btn>
-          <Btn className="sm" icon={ImageDown} onClick={savePng}>Save as picture</Btn>
+          {d.size.y > 1 && d.total > 0 && <label className="row-tight small schem-slice"><input type="checkbox" checked={slice} onChange={(e) => setSlice(e.target.checked)} />{t('Only this layer')}</label>}
+          {d.total > 0 && <Btn className="sm" icon={ListChecks} aria-expanded={showList} onClick={() => setShowList((x) => !x)}>Material list</Btn>}
+          {d.total > 0 && <Btn className="sm" icon={ImageDown} onClick={savePng}>Save as picture</Btn>}
           {siblings === null ? <Btn className="sm ghost" icon={GitCompare} onClick={loadSiblings}>Compare …</Btn> : (
             <select className="select schem-compare" aria-label={t('Compare with')} value={other ? other.path : ''} onChange={(e) => compareWith(e.target.value)}>
               <option value="">{siblings.length ? t('Compare with …') : t('No other build in this folder')}</option>
@@ -176,12 +188,13 @@ export default function Viewer({ root, path, name }) {
           )}
         </div>
       )}
-      {d && showList && (
+      {d && d.total > 0 && showList && (
         <div className="schem-materials">
           <div className="row-tight"><b className="small grow">{t('{n} block types, {total} blocks', { n: list.length, total: num(d.total) })}</b><Btn className="xs" icon={Copy} onClick={copyList}>Copy</Btn><Btn className="xs" icon={FileDown} onClick={saveCsv}>Save as CSV</Btn></div>
-          <table className="table small"><thead><tr><th>Block</th><th className="right">Count</th><th className="right">Stacks</th></tr></thead>
-            <tbody>{list.map((m) => <tr key={m.name}><td><span className="schem-swatch" style={{ background: colorOf(m.name)[0] }} aria-hidden="true" />{m.label}</td><td className="right mono">{num(m.count)}</td><td className="right mono">{m.count >= STACK ? `${num(m.stacks)} × 64${m.rest ? ` + ${num(m.rest)}` : ''}` : '–'}</td></tr>)}</tbody>
-          </table>
+          {list.length > 6 && <label className="ext-search schem-mat-search"><Search size={14} aria-hidden="true" /><input className="input sm" type="search" value={mq} onChange={(e) => setMq(e.target.value)} placeholder={t('Search blocks …')} aria-label={t('Search blocks')} /></label>}
+          {listShown.length === 0 ? <p className="small muted">{t('No block matches.')}</p> : <table className="table small"><thead><tr><th>Block</th><th className="right">Count</th><th className="right">Stacks</th></tr></thead>
+            <tbody>{listShown.map((m) => <tr key={m.name}><td><span className="schem-swatch" style={{ background: colorOf(m.name)[0] }} aria-hidden="true" />{m.label}</td><td className="right mono">{num(m.count)}</td><td className="right mono">{m.count >= STACK ? `${num(m.stacks)} × 64${m.rest ? ` + ${num(m.rest)}` : ''}` : '–'}</td></tr>)}</tbody>
+          </table>}
         </div>
       )}
     </div>
