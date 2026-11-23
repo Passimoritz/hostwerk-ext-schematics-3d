@@ -4,7 +4,7 @@
 
 Minecraft-Bauwerke in 3D ansehen, bevor du sie setzt: .schem (WorldEdit/Sponge), .litematic (Litematica) und .schematic (MCEdit).
 
-[English](README.md) · Offizielle [Hostwerk](https://github.com/Passimoritz/hostwerk-public)-Erweiterung (native Erweiterung, ab Hostwerk 2.9; Datei-Browser-Anschlüsse SDK 3.2)
+[English](README.md) · Offizielle [Hostwerk](https://github.com/Passimoritz/hostwerk-public)-Erweiterung (native Erweiterung, ab Hostwerk 3.2 – Datei-Browser-Anschlüsse)
 
 ![Bildschirmfoto](docs/screenshot.de.png)
 

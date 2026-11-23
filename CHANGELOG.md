@@ -1,3 +1,9 @@
+## 1.3.0
+
+- Material list with German block names in the German interface and a search (name or block ID); search and server choice stay on top while scrolling the file list. / Materialliste mit deutschen Blocknamen in der deutschen Oberfläche und einer Suche (Name oder Block-ID); Suche und Server-Auswahl bleiben beim Scrollen der Dateiliste oben.
+- Much faster and safe with damaged or oversized files (seconds and up to 1 GB before → milliseconds), clear error messages instead of technical ones, builds in world/generated/ are found. / Viel schneller und sicher bei kaputten oder übergroßen Dateien (vorher Sekunden und bis zu 1 GB → Millisekunden), verständliche statt technischer Fehlermeldungen, Bauwerke in world/generated/ werden gefunden.
+- Fixes: empty builds show a hint instead of empty tools, “1 block” instead of “1 blocks”, CSV with decimal comma in German, comparison is reset when switching files. Needs Hostwerk 3.2 (file browser slots). / Korrekturen: leere Bauwerke zeigen einen Hinweis statt leerer Werkzeuge, „1 Block“ statt „1 Blöcke“, CSV mit Dezimalkomma auf Deutsch, Vergleich wird beim Dateiwechsel verworfen. Braucht Hostwerk 3.2 (Datei-Browser-Anschlüsse).
+
 ## 1.2.2
 
 - New animated icon and banner in the common Hostwerk style (isometric block). / Neues animiertes Symbol und Banner im gemeinsamen Hostwerk-Stil (isometrischer Block).

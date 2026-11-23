@@ -4,7 +4,7 @@
 
 Look at Minecraft builds in 3D before you place them: .schem (WorldEdit/Sponge), .litematic (Litematica) and .schematic (MCEdit).
 
-[Deutsch](README.de.md) · An official [Hostwerk](https://github.com/Passimoritz/hostwerk-public) extension (native extension, Hostwerk 2.9 or newer)
+[Deutsch](README.de.md) · An official [Hostwerk](https://github.com/Passimoritz/hostwerk-public) extension (native extension, Hostwerk 3.2 or newer – file browser slots)
 
 ![Screenshot](docs/screenshot.png)
 
